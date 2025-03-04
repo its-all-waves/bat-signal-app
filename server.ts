@@ -1,13 +1,11 @@
 /**
-
-
-
-
-
-
+Serve dingDong.
 */
 
-const notFoundResponse = new Response("404 Not Found", { status: 404 });
+import BatSignal from "./BatSignal.ts";
+
+const batSignal = new BatSignal();
+await batSignal.connect();
 
 Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
   const { pathname } = new URL(req.url);
@@ -18,27 +16,40 @@ Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
         const index = await Deno.open("./static/index.html", { read: true });
         return new Response(index.readable);
       } catch {
-        return notFoundResponse;
+        return notFoundResponse();
       }
     case "/static/index.js":
       try {
         const indexJs = await Deno.open("./static/index.js", { read: true });
         return new Response(indexJs.readable);
       } catch {
-        return notFoundResponse;
+        return notFoundResponse();
       }
     case "/dingDong": {
-      const formData = req.body?.values;
-      console.log(formData);
       try {
-        // TODO: hit arduino could -> bat_signal_on = true
-        return new Response("ding dong!");
+        batSignal.on();
+        return new JSONResponse({ success: true });
       } catch {
-        // TODO: better response
-        return notFoundResponse;
+        return new JSONResponse({ success: false });
       }
     }
     default:
-      return notFoundResponse;
+      return notFoundResponse();
   }
 });
+
+function notFoundResponse() {
+  return new Response("404 Not Found", { status: 404 });
+}
+
+class JSONResponse extends Response {
+  constructor(obj: object) {
+    let stringified;
+    try {
+      stringified = JSON.stringify(obj);
+    } catch {
+      throw new Error("`obj` must be stringifiable.");
+    }
+    super(stringified, { headers: { "Content-Type": "application/json" } });
+  }
+}

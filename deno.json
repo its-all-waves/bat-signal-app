@@ -1,8 +1,10 @@
 {
   "tasks": {
-    "dev": "deno run --watch main.ts"
+    "dev": "deno run --watch -NRE server.ts"
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@1"
+    "@arduino/arduino-iot-client": "npm:@arduino/arduino-iot-client@^3.0.0",
+    "@std/assert": "jsr:@std/assert@1",
+    "arduino-iot-js": "npm:arduino-iot-js@^0.14.1"
   }
 }
