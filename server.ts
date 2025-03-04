@@ -1,15 +1,22 @@
 /**
+
 Serve dingDong.
+
 */
 
 import BatSignal from "./BatSignal.ts";
 
 const batSignal = new BatSignal();
+// TODO: handle error -- cannot connect -- exponential backoff
 await batSignal.connect();
 
 Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
-  const { pathname } = new URL(req.url);
-  console.log({ pathname });
+  const { method, url } = req;
+  const { pathname } = new URL(url);
+  console.log(
+    `${new Date().toISOString()} :: Request :: ${method} :: ${pathname}`,
+  );
+
   switch (pathname) {
     case "/":
       try {
@@ -18,6 +25,7 @@ Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
       } catch {
         return notFoundResponse();
       }
+
     case "/static/index.js":
       try {
         const indexJs = await Deno.open("./static/index.js", { read: true });
@@ -25,7 +33,17 @@ Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
       } catch {
         return notFoundResponse();
       }
+
     case "/dingDong": {
+      // avoid responding to automated requests by
+      // requiring POST and body: { `isAuthorizedLol` }
+      if (method !== "POST") return unauthorizedResposne();
+      try {
+        const { isAuthorizedLOL } = await req.json();
+        if (!isAuthorizedLOL) return unauthorizedResposne();
+      } catch {
+        return unauthorizedResposne();
+      }
       try {
         batSignal.on();
         return new JSONResponse({ success: true });
@@ -33,6 +51,7 @@ Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
         return new JSONResponse({ success: false });
       }
     }
+
     default:
       return notFoundResponse();
   }
@@ -40,6 +59,10 @@ Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
 
 function notFoundResponse() {
   return new Response("404 Not Found", { status: 404 });
+}
+
+function unauthorizedResposne() {
+  return new Response("Unathorized", { status: 401 });
 }
 
 class JSONResponse extends Response {

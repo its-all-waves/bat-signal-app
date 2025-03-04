@@ -3,6 +3,7 @@ import { ArduinoIoTCloud } from "arduino-iot-js";
 import { deviceId, secretKey } from "./secrets.ts";
 
 /**
+
 `BatSignal` maintains a connection to Arduino IoT Cloud and
 exposes the `on()` and `toggle()` methods.
 
@@ -12,8 +13,8 @@ const batSignal = new BatSignal()
 await batSignal.connect()
 batSignal.on()
 batSignal.toggle()
-
 ```
+
 */
 export default class BatSignal {
   private client: ISinglePropertyCloudClient | null = null;
