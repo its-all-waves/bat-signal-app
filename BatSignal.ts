@@ -19,6 +19,8 @@ batSignal.toggle()
 export default class BatSignal {
   private client: ISinglePropertyCloudClient | null = null;
 
+  private isConnected = false;
+
   private batSignalVar = "bat_signal";
 
   /** Kept in sync with `bat_signal` in Arduino Cloud,
@@ -29,16 +31,27 @@ export default class BatSignal {
   constructor() {}
 
   public async connect() {
-    this.client = await ArduinoIoTCloud.connect({
-      deviceId,
-      secretKey,
-      onConnected() {
-        console.log("CONNECTED TO ARDUINO CLOUD");
-      },
-      onDisconnect(message) {
-        console.error("ERROR: DISCONNECTED FROM ARDUIONO CLOUD:", message);
-      },
-    });
+    try {
+      this.client = await ArduinoIoTCloud.connect({
+        deviceId,
+        secretKey,
+        onConnected: () => {
+          console.log("CONNECTED TO ARDUINO CLOUD");
+          this.isConnected = true;
+        },
+        onDisconnect: () => {
+          console.error("ERROR: DISCONNECTED FROM ARDUIONO CLOUD:", message);
+          this.isConnected = false;
+        },
+        onOffline: () => {
+          console.error("ERROR: OFFLINE -- WHAT CAUSED THIS?");
+          this.isConnected = false;
+        },
+      });
+    } catch (err) {
+      console.error("ERROR: COULD NOT CONNECT TO ARDUINO CLOUD:", err);
+      return;
+    }
 
     // keep local in sync with cloud
     this.client.onPropertyValue(this.batSignalVar, (val: boolean) => {
@@ -50,8 +63,8 @@ export default class BatSignal {
   }
 
   private ensureConnection() {
-    if (!this.client) {
-      throw new Error("Could not connect to Arduino Cloud.");
+    if (!this.isConnected) {
+      throw new Error("ERROR: NOT CONNECTED TO ARDUINO CLOUD");
     }
   }
 
