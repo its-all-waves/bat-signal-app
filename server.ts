@@ -2,6 +2,13 @@
 
 Serve dingDong.
 
+TODO:
+  FEATURE:
+    - [ ] add button to device that allows a response from
+    the recipient of the bat signal
+      - user dingDongs > recipient hits button on device > user sees "coming!"
+      so they know it worked
+
 */
 
 import BatSignal from "./BatSignal.ts";
