@@ -74,10 +74,20 @@ export default class BatSignal {
     this.client!.sendProperty(this.BAT_SIGNAL_VAR, this.bat_signal);
   }
 
+  isOn() {
+    return this.bat_signal;
+  }
+
   on() {
-    if (this.bat_signal === true) return;
+    if (this.isOn()) return;
     this.setBatSignal(true);
     console.log("TURNED ON BAT SIGNAL");
+  }
+
+  off() {
+    if (!this.isOn()) return;
+    this.setBatSignal(false);
+    console.log("TURNED OFF BAT SIGNAL");
   }
 
   toggle() {
