@@ -21,7 +21,7 @@ export default class BatSignal {
 
   private isConnected = false;
 
-  private batSignalVar = "bat_signal";
+  private readonly BAT_SIGNAL_VAR = "bat_signal";
 
   /** Kept in sync with `bat_signal` in Arduino Cloud,
   but cannot initialize to the Cloud value. Can only
@@ -54,10 +54,10 @@ export default class BatSignal {
     }
 
     // keep local in sync with cloud
-    this.client.onPropertyValue(this.batSignalVar, (val: boolean) => {
+    this.client.onPropertyValue(this.BAT_SIGNAL_VAR, (val: boolean) => {
       this.bat_signal = val;
       console.log(
-        `CHANGED IN CLOUD: ${this.batSignalVar} -> ${this.bat_signal}`,
+        `CHANGED IN CLOUD: ${this.BAT_SIGNAL_VAR} -> ${this.bat_signal}`,
       );
     });
   }
@@ -71,7 +71,7 @@ export default class BatSignal {
   private setBatSignal(val: boolean) {
     this.assertIsConnected();
     this.bat_signal = val;
-    this.client!.sendProperty(this.batSignalVar, this.bat_signal);
+    this.client!.sendProperty(this.BAT_SIGNAL_VAR, this.bat_signal);
   }
 
   on() {
