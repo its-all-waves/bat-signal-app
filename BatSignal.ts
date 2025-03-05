@@ -30,7 +30,7 @@ export default class BatSignal {
 
   constructor() {}
 
-  public async connect() {
+  async connect() {
     try {
       this.client = await ArduinoIoTCloud.connect({
         deviceId: jsClientDeviceId,
@@ -68,16 +68,20 @@ export default class BatSignal {
     }
   }
 
-  on() {
+  private setBatSignal(val: boolean) {
     this.assertIsConnected();
-    this.client!.sendProperty(this.batSignalVar, true);
+    this.bat_signal = val;
+    this.client!.sendProperty(this.batSignalVar, this.bat_signal);
+  }
+
+  on() {
+    if (this.bat_signal === true) return;
+    this.setBatSignal(true);
     console.log("TURNED ON BAT SIGNAL");
   }
 
   toggle() {
-    this.assertIsConnected();
-    this.bat_signal = !this.bat_signal;
-    this.client!.sendProperty(this.batSignalVar, this.bat_signal);
+    this.setBatSignal(!this.bat_signal);
     console.log(`TOGGLED BAT SIGNAL -> ${this.bat_signal}`);
   }
 }
