@@ -6,11 +6,13 @@ Serve dingDong.
 
 import BatSignal from "./BatSignal.ts";
 
-const batSignal = new BatSignal();
-// TODO: handle error -- cannot connect -- exponential backoff
-await batSignal.connect();
+const HOSTNAME = "0.0.0.0";
+const PORT = 8080;
 
-Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
+const batSignal = new BatSignal();
+await batSignal.connect(); // TODO: handle error -- cannot connect -- exponential backoff
+
+Deno.serve({ hostname: HOSTNAME, port: PORT }, async (req) => {
   const { method, url } = req;
   const { pathname } = new URL(url);
   console.log(
