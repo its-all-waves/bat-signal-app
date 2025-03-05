@@ -1,6 +1,6 @@
 import { ISinglePropertyCloudClient } from "arduino-iot-js";
 import { ArduinoIoTCloud } from "arduino-iot-js";
-import { deviceId, secretKey } from "./secrets.ts";
+import { jsClientDeviceId, jsClientSecretKey } from "./secrets.ts";
 
 /**
 
@@ -25,7 +25,7 @@ export default class BatSignal {
 
   /** Kept in sync with `bat_signal` in Arduino Cloud,
   but cannot initialize to the Cloud value. Can only
-  listen respond to change events. */
+  listen and respond to change events. */
   private bat_signal = false;
 
   constructor() {}
@@ -33,13 +33,13 @@ export default class BatSignal {
   public async connect() {
     try {
       this.client = await ArduinoIoTCloud.connect({
-        deviceId,
-        secretKey,
+        deviceId: jsClientDeviceId,
+        secretKey: jsClientSecretKey,
         onConnected: () => {
           console.log("CONNECTED TO ARDUINO CLOUD");
           this.isConnected = true;
         },
-        onDisconnect: () => {
+        onDisconnect: (message) => {
           console.error("ERROR: DISCONNECTED FROM ARDUIONO CLOUD:", message);
           this.isConnected = false;
         },
@@ -62,20 +62,20 @@ export default class BatSignal {
     });
   }
 
-  private ensureConnection() {
+  private assertIsConnected() {
     if (!this.isConnected) {
       throw new Error("ERROR: NOT CONNECTED TO ARDUINO CLOUD");
     }
   }
 
   on() {
-    this.ensureConnection();
+    this.assertIsConnected();
     this.client!.sendProperty(this.batSignalVar, true);
     console.log("TURNED ON BAT SIGNAL");
   }
 
   toggle() {
-    this.ensureConnection();
+    this.assertIsConnected();
     this.bat_signal = !this.bat_signal;
     this.client!.sendProperty(this.batSignalVar, this.bat_signal);
     console.log(`TOGGLED BAT SIGNAL -> ${this.bat_signal}`);

@@ -37,12 +37,12 @@ Deno.serve({ hostname: "localhost", port: 8080 }, async (req) => {
     // avoid responding to headless, automated requests by
     // requiring POST and body: { `isAuthorizedLol` }
     case "/dingDong": {
-      if (method !== "POST") return unauthorizedResposne();
+      if (method !== "POST") return unauthorizedResponse();
       try {
         const { isAuthorizedLOL } = await req.json();
-        if (!isAuthorizedLOL) return unauthorizedResposne();
+        if (!isAuthorizedLOL) return unauthorizedResponse();
       } catch {
-        return unauthorizedResposne();
+        return unauthorizedResponse();
       }
       try {
         batSignal.on();
@@ -62,7 +62,7 @@ function notFoundResponse() {
   return new Response("404 Not Found", { status: 404 });
 }
 
-function unauthorizedResposne() {
+function unauthorizedResponse() {
   return new Response("Unathorized", { status: 401 });
 }
 
