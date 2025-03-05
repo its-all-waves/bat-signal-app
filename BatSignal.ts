@@ -4,15 +4,16 @@ import { jsClientDeviceId, jsClientSecretKey } from "./secrets.ts";
 
 /**
 
-`BatSignal` maintains a connection to Arduino IoT Cloud and
-exposes the `on()` and `toggle()` methods.
+`BatSignal` maintains a connection to Arduino IoT Cloud
+and controls the associated device with its public methods.
+
+Use it like a singleton.
 
 # Usage:
 ```ts
 const batSignal = new BatSignal()
 await batSignal.connect()
 batSignal.on()
-batSignal.toggle()
 ```
 
 */
