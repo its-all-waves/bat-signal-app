@@ -7,12 +7,19 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
-    <script src="./static/index.js"></script>
+    <script type="module" src="./static/index.js"></script>
     <title>dingDong</title>
   </head>
   <body>
-    <main class="container flex-centered">
-      <button id="dingDong" onclick="dingDong()">dingDong</button>
+    <span id="sse-status" class="margin float-right">🟡</span>
+    <main>
+      <div class="container flex-centered">
+        <div class="flex-centered text-center">
+          <span id="is-someone-coming">&nbsp;</span>
+          <span id="is-bat-signal-busy" class="margin">Bat Signal ready.</span>
+          <button id="dingDong" onclick="Global.dingDong()">dingDong</button>
+        </div>
+      </div>
     </main>
   </body>
 </html>
@@ -27,5 +34,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .margin {
+    margin: 2rem;
+  }
+
+  .float-right {
+    float: right;
   }
 </style>

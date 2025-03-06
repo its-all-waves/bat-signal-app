@@ -1,5 +1,5 @@
-import { ISinglePropertyCloudClient } from "arduino-iot-js";
-import { ArduinoIoTCloud } from "arduino-iot-js";
+import { ISinglePropertyCloudClient } from "npm:arduino-iot-js";
+import { ArduinoIoTCloud } from "npm:arduino-iot-js";
 import { jsClientDeviceId, jsClientSecretKey } from "./secrets.ts";
 
 /**
@@ -104,5 +104,9 @@ export default class BatSignal {
   toggle() {
     this.setBatSignal(!this.bat_signal);
     console.log(`TOGGLED BAT SIGNAL -> ${this.bat_signal}`);
+  }
+
+  isSomeoneComing() {
+    return this.someone_is_coming;
   }
 }
