@@ -29,6 +29,10 @@ export default class BatSignal {
   listen and respond to change events. */
   private bat_signal = false;
 
+  private readonly SOMEONE_IS_COMING_VAR = "someone_is_coming";
+
+  private someone_is_coming = false;
+
   constructor() {}
 
   async connect() {
@@ -59,6 +63,12 @@ export default class BatSignal {
       this.bat_signal = val;
       console.log(
         `CHANGED IN CLOUD: ${this.BAT_SIGNAL_VAR} -> ${this.bat_signal}`,
+      );
+    });
+    this.client.onPropertyValue(this.SOMEONE_IS_COMING_VAR, (val: boolean) => {
+      this.someone_is_coming = val;
+      console.log(
+        `CHANGED IN CLOUD: ${this.SOMEONE_IS_COMING_VAR} -> ${this.someone_is_coming}`,
       );
     });
   }
