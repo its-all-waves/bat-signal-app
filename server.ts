@@ -4,10 +4,7 @@ Serve dingDong.
 
 TODO:
   FEATURE:
-    - [ ] add button to device that allows a response from
-    the recipient of the bat signal
-      - user dingDongs > recipient hits button on device > user sees "coming!"
-      so they know it worked
+    - [ ] tell user when the bat signal is unavailable
 
 */
 
@@ -84,25 +81,24 @@ Deno.serve({ hostname: HOSTNAME, port: PORT }, async (req) => {
     // requiring POST and body: { `isAuthorizedLol` }
     case "/dingDong": {
       if (method !== "POST") return unauthorizedResponse();
-
       try {
         const { isAuthorizedLOL } = await req.json();
         if (!isAuthorizedLOL) return unauthorizedResponse();
       } catch {
         return unauthorizedResponse();
       }
+
       try {
         batSignal.on();
-        return new JSONResponse({ success: true });
+        return Response.json({ success: true });
       } catch (err) {
         console.error(err);
-        return new JSONResponse({ success: false });
+        return Response.json({ success: false });
       }
     }
-
-    default:
-      return notFoundResponse();
   }
+
+  return notFoundResponse();
 });
 
 function notFoundResponse() {
@@ -111,16 +107,4 @@ function notFoundResponse() {
 
 function unauthorizedResponse() {
   return new Response("Unathorized", { status: 401 });
-}
-
-class JSONResponse extends Response {
-  constructor(obj: object) {
-    let stringified;
-    try {
-      stringified = JSON.stringify(obj);
-    } catch {
-      throw new Error("`obj` must be stringifiable.");
-    }
-    super(stringified, { headers: { "Content-Type": "application/json" } });
-  }
 }
