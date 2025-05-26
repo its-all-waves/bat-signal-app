@@ -35,9 +35,9 @@ Deno.serve((req) => {
     }
 
     case "/dingDong": {
-      console.log(`ding dong at ${new Date()}`)
       try {
         batSignal.on();
+        console.log(`ding dong at ${new Date()}`)
         return Response.json(
           {success: true},
           {headers: {
