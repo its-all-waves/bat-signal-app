@@ -35,12 +35,21 @@ Deno.serve((req) => {
     }
 
     case "/dingDong": {
+      console.log(`ding dong at ${new Date()}`)
       try {
         batSignal.on();
-        return Response.json({success: true})
+        return Response.json(
+          {success: true},
+          {headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              "Connection": "keep-alive",
+              "Access-Control-Allow-Origin": origin,
+          }}
+        )
       } catch (err) {
         console.log("Dingdong endpoint caused exception. Error: ", err);
-        return Response.json({ success: false})
+        return serverError()
       }
     }
   }
