@@ -3,6 +3,7 @@ services:
   bat-signal-backend:
     container_name: bat-signal
     image: bat-signal-img
+    restart: always
     build:
       dockerfile: ./Dockerfile
     working_dir: /home/deno/dingDong
