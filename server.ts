@@ -104,6 +104,7 @@ async function authenticate(req: Request) {
   if (req.method !== "POST") return false;
 
   const origin = req.headers.get("origin");
+
   if (!origin) return false;
   if (!allowedOrigins.includes(origin)) return false;
 
@@ -111,7 +112,8 @@ async function authenticate(req: Request) {
   try {
     const { isAuthorizedLOL } = await req.json();
     if (!isAuthorizedLOL) return false;
-  } catch {
+  } catch (err) {
+    console.error("Couldn't authenticate the request:", err);
     return false;
   }
 
