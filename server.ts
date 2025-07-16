@@ -95,7 +95,7 @@ function corsHeader(origin: string): HeadersInit {
 
 /** Avoid responding to headless, automated requests by
 requiring POST and body: { `isAuthorizedLol` }, and
-ensure host is allowed. */
+ensure request is coming from a whitelisted domain. */
 async function isRequestAllowed(req: Request) {
   if (req.method !== "POST") return false;
 
@@ -123,18 +123,12 @@ function newStream(req: Request) {
     start(controller) {
       const encoder = new TextEncoder();
 
-      // const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })} \n\n`;
+      const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })}\n\n`;
 
-      // // send initial message to keep connection open
-      // controller.enqueue(encoder.encode(heartbeatMsg));
-
-      // const heartbeatInterval = setInterval(() => {
-      //   controller.enqueue(
-      //     encoder.encode(
-      //       heartbeatMsg,
-      //     ),
-      //   );
-      // }, SSE_HEARTBEAT_INTERVAL_MS);
+      // keep the connection alive
+      const heartbeatInterval = setInterval(() => {
+        controller.enqueue(encoder.encode(heartbeatMsg));
+      }, SSE_HEARTBEAT_INTERVAL_MS);
 
       const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
@@ -145,11 +139,12 @@ function newStream(req: Request) {
           })
         }\n\n`;
         controller.enqueue(encoder.encode(data));
+        console.log("[ INFO ] Sent message to client");
       });
 
       req.signal.addEventListener("abort", () => {
         console.error("[ ERR ] Stream aborted by client");
-        // clearInterval(heartbeatInterval);
+        clearInterval(heartbeatInterval);
         broadcastChannel.close();
         controller.close();
       });
@@ -163,12 +158,4 @@ function newStream(req: Request) {
 
 function notFoundResponse() {
   return new Response(null, { status: 404 });
-}
-
-function unauthorizedResponse() {
-  return new Response("Unathorized", { status: 401 });
-}
-
-function serverErrorResponse() {
-  return new Response("Oops, server error", { status: 501 });
 }

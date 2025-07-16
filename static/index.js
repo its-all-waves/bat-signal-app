@@ -3,16 +3,22 @@ import { SSESource } from "https://esm.sh/jsr/@planigale/sse";
 window.onload = async function() {
   const statusElems = {
     sseStatus: document.getElementById("sse-status"),
-    isBatSignalBusy: document.getElementById("is-bat-signal-busy"),
-    isSomeoneComing: document.getElementById("is-someone-coming"),
+    batSignalStatus: document.getElementById("is-bat-signal-busy"),
   }
-  const sseSource = new SSESource("/connect", {
-    method: "POST",
-    body: JSON.stringify({ isAuthorizedLOL: true })
-  })
+  let sseSource;
+  try {
+    sseSource = new SSESource("/connect", {
+      method: "POST",
+      body: JSON.stringify({ isAuthorizedLOL: true })
+    })
+    statusElems.sseStatus.textContent = "🟢"
+  } catch (err) {
+    console.error("Couldn't make SSE connection:", err)
+    statusElems.sseStatus.textContent = "🔴"
+    setTimeout(() => { location.reload() }, 5000)
+  }
   try {
     for await (const event of sseSource) {
-      statusElems.sseStatus.textContent = "🟢"
       if (!event.data) continue
       console.log(event.data)
       let data = null
@@ -21,25 +27,25 @@ window.onload = async function() {
       } catch (err) {
         console.error("ERROR: Parsing JSON from SSE:", err)
       }
-      if (data) {
+      if (data && !data.heartbeat) {
         const {
-          sse_interval_ms: _,
           is_bat_signal_busy,
           is_someone_coming,
         } = data
-        statusElems.isBatSignalBusy.textContent = is_bat_signal_busy
-          ? "Bat Signal raised!"
-          : "Bat Signal ready."
-        statusElems.isSomeoneComing.textContent = is_someone_coming
-          ? "Coming!" : "\xa0"
+        statusElems.batSignalStatus.textContent =
+          is_someone_coming
+            ? "Coming!"
+            : is_bat_signal_busy
+              ? "Bat Signal raised!"
+              : "Bat Signal ready."
       }
     }
     console.log("SSE connection closed.")
     statusElems.sseStatus.textContent = "🟡"
   } catch (err) {
-    // console.error("ERROR: Couldn't connect or lost connection to the event stream:", err);
+    console.error("Lost SSE connection:", err);
     statusElems.sseStatus.textContent = "🔴"
-    console.error(err)
+    setTimeout(() => { location.reload() }, 5000)
   }
 }
 

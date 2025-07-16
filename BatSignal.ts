@@ -33,6 +33,7 @@ export default class BatSignal {
 
   private someone_is_coming = false;
 
+  /* Used to announce Arduino var changes, triggering outgoing SSE message */
   private broadcastChannel = new BroadcastChannel('bat-signal');
 
   constructor() {}
@@ -89,6 +90,7 @@ export default class BatSignal {
     this.assertIsConnected();
     this.bat_signal = val;
     this.client!.sendProperty(this.BAT_SIGNAL_VAR, this.bat_signal);
+    this.broadcastChannel.postMessage("CHANGED");
   }
 
   isOn() {
