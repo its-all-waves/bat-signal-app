@@ -52,7 +52,7 @@ Deno.serve({ hostname: HOSTNAME, port: PORT }, async (req: Request) => {
       if (!(await isRequestAllowed(req))) {
         return notFoundResponse();
       }
-      const stream = getStream(req);
+      const stream = newStream(req);
       return new Response(stream, { headers: sseHeaders(origin!) });
     }
 
@@ -116,11 +116,11 @@ async function isRequestAllowed(req: Request) {
   return true;
 }
 
-function getStream(req: Request) {
-  const stream = new ReadableStream({
+function newStream(req: Request) {
+  return new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
-      const broadcastChannel = new BroadcastChannel("bat-signal")
+      const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
         const data = `data: ${
           JSON.stringify({
@@ -134,9 +134,16 @@ function getStream(req: Request) {
       req.signal.addEventListener("abort", () => {
         controller.close();
       });
+
+      const initialData = `data: ${
+        JSON.stringify({
+          is_bat_signal_busy: batSignal.isOn(),
+          is_someone_coming: batSignal.isSomeoneComing(),
+        })
+      }\n\n`;
+      controller.enqueue(encoder.encode(initialData));
     },
   });
-  return stream;
 }
 
 function notFoundResponse() {
