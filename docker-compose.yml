@@ -9,7 +9,6 @@ services:
     working_dir: /home/deno/dingDong
     command: bash -c "\
       deno cache server.ts && \
-      timeout 10s deno -A server.ts || [ $? -eq 124 ] || exit 1 && \
       deno run --unstable-broadcast-channel -NRE server.ts"
     volumes:
       - ./:/home/deno/dingDong
