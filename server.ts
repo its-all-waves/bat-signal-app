@@ -109,14 +109,14 @@ async function isRequestAllowed(req: Request) {
     const { isAuthorizedLOL } = await req.json();
     if (!isAuthorizedLOL) return false;
   } catch (err) {
-    console.error("Couldn't authenticate the request:", err);
+    console.error("[ ERR ] Couldn't authenticate the request:", err);
     return false;
   }
 
   return true;
 }
 
-const SSE_HEARTBEAT_INTERVAL_MS = 1_000;
+const SSE_HEARTBEAT_INTERVAL_MS = 9_000;
 
 function newStream(req: Request) {
   return new ReadableStream({
@@ -148,18 +148,15 @@ function newStream(req: Request) {
       });
 
       req.signal.addEventListener("abort", () => {
+        console.error("[ ERR ] Stream aborted by client");
         clearInterval(heartbeatInterval);
         broadcastChannel.close();
         controller.close();
       });
+    },
 
-      // const initialData = `data: ${
-      //   JSON.stringify({
-      //     is_bat_signal_busy: batSignal.isOn(),
-      //     is_someone_coming: batSignal.isSomeoneComing(),
-      //   })
-      // }\n\n`;
-      // controller.enqueue(encoder.encode(initialData));
+    cancel(reason) {
+      console.error("[ ERR ] Stream was canceled:", reason);
     },
   });
 }
