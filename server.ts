@@ -123,18 +123,18 @@ function newStream(req: Request) {
     start(controller) {
       const encoder = new TextEncoder();
 
-      const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })} \n\n`;
+      // const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })} \n\n`;
 
-      // send initial message to keep connection open
-      controller.enqueue(encoder.encode(heartbeatMsg));
+      // // send initial message to keep connection open
+      // controller.enqueue(encoder.encode(heartbeatMsg));
 
-      const heartbeatInterval = setInterval(() => {
-        controller.enqueue(
-          encoder.encode(
-            heartbeatMsg,
-          ),
-        );
-      }, SSE_HEARTBEAT_INTERVAL_MS);
+      // const heartbeatInterval = setInterval(() => {
+      //   controller.enqueue(
+      //     encoder.encode(
+      //       heartbeatMsg,
+      //     ),
+      //   );
+      // }, SSE_HEARTBEAT_INTERVAL_MS);
 
       const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
@@ -149,7 +149,7 @@ function newStream(req: Request) {
 
       req.signal.addEventListener("abort", () => {
         console.error("[ ERR ] Stream aborted by client");
-        clearInterval(heartbeatInterval);
+        // clearInterval(heartbeatInterval);
         broadcastChannel.close();
         controller.close();
       });
