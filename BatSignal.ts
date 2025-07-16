@@ -33,6 +33,8 @@ export default class BatSignal {
 
   private someone_is_coming = false;
 
+  private broadcastChannel = new BroadcastChannel('bat-signal');
+
   constructor() {}
 
   async connect() {
@@ -61,12 +63,14 @@ export default class BatSignal {
     // keep local in sync with cloud
     this.client.onPropertyValue(this.BAT_SIGNAL_VAR, (val: boolean) => {
       this.bat_signal = val;
+      this.broadcastChannel.postMessage("CHANGED");
       console.log(
         `CHANGED IN CLOUD: ${this.BAT_SIGNAL_VAR} -> ${this.bat_signal}`,
       );
     });
     this.client.onPropertyValue(this.SOMEONE_IS_COMING_VAR, (val: boolean) => {
       this.someone_is_coming = val;
+      this.broadcastChannel.postMessage("CHANGED");
       console.log(
         `CHANGED IN CLOUD: ${this.SOMEONE_IS_COMING_VAR} -> ${this.someone_is_coming}`,
       );

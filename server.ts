@@ -14,8 +14,6 @@ import { allowedOrigins } from "./secrets.ts";
 const HOSTNAME = "0.0.0.0";
 const PORT = 8080;
 
-const SSE_MSG_INTERVAL_MS = 1000;
-
 const batSignal = new BatSignal();
 await batSignal.connect(); // TODO: handle error -- cannot connect -- exponential backoff
 
@@ -122,7 +120,8 @@ function getStream(req: Request) {
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
-      const interval = setInterval(() => {
+      const broadcastChannel = new BroadcastChannel("bat-signal")
+      broadcastChannel.addEventListener("message", () => {
         const data = `data: ${
           JSON.stringify({
             is_bat_signal_busy: batSignal.isOn(),
@@ -130,10 +129,9 @@ function getStream(req: Request) {
           })
         }\n\n`;
         controller.enqueue(encoder.encode(data));
-      }, SSE_MSG_INTERVAL_MS);
+      });
 
       req.signal.addEventListener("abort", () => {
-        clearInterval(interval);
         controller.close();
       });
     },

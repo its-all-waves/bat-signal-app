@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --watch -NRE server.ts"
+    "dev": "deno run --watch --unstable-broadcast-channel -NRE server.ts"
   },
   "imports": {
     "@planigale/sse": "jsr:@planigale/sse@^0.2.5",
