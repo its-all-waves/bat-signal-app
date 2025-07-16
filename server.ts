@@ -116,10 +116,26 @@ async function isRequestAllowed(req: Request) {
   return true;
 }
 
+const SSE_HEARTBEAT_INTERVAL_MS = 1_000;
+
 function newStream(req: Request) {
   return new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
+
+      const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })} \n\n`;
+
+      // send initial message to keep connection open
+      controller.enqueue(encoder.encode(heartbeatMsg));
+
+      const heartbeatInterval = setInterval(() => {
+        controller.enqueue(
+          encoder.encode(
+            heartbeatMsg,
+          ),
+        );
+      }, SSE_HEARTBEAT_INTERVAL_MS);
+
       const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
         const data = `data: ${
@@ -132,16 +148,18 @@ function newStream(req: Request) {
       });
 
       req.signal.addEventListener("abort", () => {
+        clearInterval(heartbeatInterval);
+        broadcastChannel.close();
         controller.close();
       });
 
-      const initialData = `data: ${
-        JSON.stringify({
-          is_bat_signal_busy: batSignal.isOn(),
-          is_someone_coming: batSignal.isSomeoneComing(),
-        })
-      }\n\n`;
-      controller.enqueue(encoder.encode(initialData));
+      // const initialData = `data: ${
+      //   JSON.stringify({
+      //     is_bat_signal_busy: batSignal.isOn(),
+      //     is_someone_coming: batSignal.isSomeoneComing(),
+      //   })
+      // }\n\n`;
+      // controller.enqueue(encoder.encode(initialData));
     },
   });
 }
