@@ -11,11 +11,10 @@ TODO:
 import BatSignal from "./BatSignal.ts";
 import { allowedOrigins } from "./secrets.ts";
 
-// const HOSTNAME = "0.0.0.0"; // for Docker deployment
-const HOSTNAME = "localhost";
+const HOSTNAME = "0.0.0.0";
 const PORT = 8080;
 
-const SSE_MSG_INTERVAL_MS = 500;
+const SSE_MSG_INTERVAL_MS = 1000;
 
 const batSignal = new BatSignal();
 await batSignal.connect(); // TODO: handle error -- cannot connect -- exponential backoff
@@ -27,7 +26,9 @@ Deno.serve({ hostname: HOSTNAME, port: PORT }, async (req: Request) => {
   const origin = req.headers.get("origin");
 
   console.log(
-    `[ REQ ] ${new Date().toISOString()} :: ${origin ?? "[ NO ORIGIN ]"} :: ${method} :: ${pathname}`,
+    `[ REQ ] ${new Date().toISOString()} :: ${
+      origin ?? "[ NO ORIGIN ]"
+    } :: ${method} :: ${pathname}`,
   );
 
   switch (pathname) {
@@ -50,29 +51,26 @@ Deno.serve({ hostname: HOSTNAME, port: PORT }, async (req: Request) => {
       }
 
     case "/connect": {
-      const isCool = await authenticate(req);
-      if (!isCool) {
-        return unauthorizedResponse();
+      if (!(await isRequestAllowed(req))) {
+        return notFoundResponse();
       }
       const stream = getStream(req);
       return new Response(stream, { headers: sseHeaders(origin!) });
     }
 
     case "/dingDong": {
-      const isCool = await authenticate(req);
-      if (!isCool) {
-        return unauthorizedResponse();
+      if (!(await isRequestAllowed(req))) {
+        return notFoundResponse();
       }
-
       try {
-        batSignal.on();
+        batSignal.on(); // throws
         console.log(`ding dong at ${new Date()}`);
         return Response.json(
           { success: true },
           { headers: corsHeader(origin!) },
         );
       } catch (err) {
-        console.log("Dingdong endpoint caused exception. Error: ", err);
+        console.log("Dingdong endpoint caused exception: ", err);
         return Response.json(
           { success: false },
           { headers: corsHeader(origin!) },
@@ -100,7 +98,7 @@ function corsHeader(origin: string): HeadersInit {
 /** Avoid responding to headless, automated requests by
 requiring POST and body: { `isAuthorizedLol` }, and
 ensure host is allowed. */
-async function authenticate(req: Request) {
+async function isRequestAllowed(req: Request) {
   if (req.method !== "POST") return false;
 
   const origin = req.headers.get("origin");
@@ -125,10 +123,12 @@ function getStream(req: Request) {
     start(controller) {
       const encoder = new TextEncoder();
       const interval = setInterval(() => {
-        const data = `data: ${JSON.stringify({
-          is_bat_signal_busy: batSignal.isOn(),
-          is_someone_coming: batSignal.isSomeoneComing(),
-        })}\n\n`;
+        const data = `data: ${
+          JSON.stringify({
+            is_bat_signal_busy: batSignal.isOn(),
+            is_someone_coming: batSignal.isSomeoneComing(),
+          })
+        }\n\n`;
         controller.enqueue(encoder.encode(data));
       }, SSE_MSG_INTERVAL_MS);
 
@@ -142,7 +142,7 @@ function getStream(req: Request) {
 }
 
 function notFoundResponse() {
-  return new Response("404 Not Found", { status: 404 });
+  return new Response(null, { status: 404 });
 }
 
 function unauthorizedResponse() {

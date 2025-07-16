@@ -73,12 +73,14 @@ export default class BatSignal {
     });
   }
 
+  /* @throws */
   private assertIsConnected() {
     if (!this.isConnected) {
       throw new Error("ERROR: NOT CONNECTED TO ARDUINO CLOUD");
     }
   }
 
+  /* @throws */
   private setBatSignal(val: boolean) {
     this.assertIsConnected();
     this.bat_signal = val;
@@ -89,18 +91,21 @@ export default class BatSignal {
     return this.bat_signal;
   }
 
+  /* @throws */
   on() {
     if (this.isOn()) return;
     this.setBatSignal(true);
     console.log("TURNED ON BAT SIGNAL");
   }
 
+  /* @throws */
   off() {
     if (!this.isOn()) return;
     this.setBatSignal(false);
     console.log("TURNED OFF BAT SIGNAL");
   }
 
+  /* @throws */
   toggle() {
     this.setBatSignal(!this.bat_signal);
     console.log(`TOGGLED BAT SIGNAL -> ${this.bat_signal}`);
