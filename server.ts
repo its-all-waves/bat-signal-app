@@ -101,22 +101,28 @@ async function isRequestAllowed(req: Request) {
 
   const origin = req.headers.get("origin");
 
-  if (!origin) return false;
+  if (!origin || !allowedOrigins.includes(origin)) {
+    console.error("[ ERROR ] Request denied: unknown origin");
+    return false;
+  }
   if (!allowedOrigins.includes(origin)) return false;
 
   // TODO: compare with an env var instead and get this out of the repo
   try {
     const { isAuthorizedLOL } = await req.json();
-    if (!isAuthorizedLOL) return false;
+    if (!isAuthorizedLOL) {
+      console.error("[ ERROR ] Request denied: request did not contain the super secret passphrase");
+      return false;
+    }
   } catch (err) {
-    console.error("[ ERR ] Couldn't authenticate the request:", err);
+    console.error("[ ERROR ] Couldn't parse JSON:", err);
     return false;
   }
 
   return true;
 }
 
-const SSE_HEARTBEAT_INTERVAL_MS = 9_000;
+const SSE_HEARTBEAT_INTERVAL_MS = 6_000;
 
 function newStream(req: Request) {
   return new ReadableStream({
@@ -130,8 +136,17 @@ function newStream(req: Request) {
         controller.enqueue(encoder.encode(heartbeatMsg));
       }, SSE_HEARTBEAT_INTERVAL_MS);
 
+      const initialData = `data: ${
+        JSON.stringify({
+          is_bat_signal_busy: batSignal.isOn(),
+          is_someone_coming: batSignal.isSomeoneComing(),
+        })
+      }\n\n`;
+      controller.enqueue(encoder.encode(initialData));
+
       const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
+        // WARNING: problem parsing only some SSE messages on client? try adding a timestamp key to data
         const data = `data: ${
           JSON.stringify({
             is_bat_signal_busy: batSignal.isOn(),
@@ -143,7 +158,7 @@ function newStream(req: Request) {
       });
 
       req.signal.addEventListener("abort", () => {
-        console.error("[ ERR ] Stream aborted by client");
+        console.error("[ ERROR ] Stream aborted by client");
         clearInterval(heartbeatInterval);
         broadcastChannel.close();
         controller.close();
@@ -151,7 +166,7 @@ function newStream(req: Request) {
     },
 
     cancel(reason) {
-      console.error("[ ERR ] Stream was canceled:", reason);
+      console.error("[ ERROR ] Stream was canceled:", reason);
     },
   });
 }

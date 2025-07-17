@@ -1,22 +1,25 @@
-import { ISinglePropertyCloudClient } from "npm:arduino-iot-js";
+import type { ISinglePropertyCloudClient } from "npm:arduino-iot-js";
 import { ArduinoIoTCloud } from "npm:arduino-iot-js";
 import { jsClientDeviceId, jsClientSecretKey } from "./secrets.ts";
 
 /**
+ *
+ * `BatSignal` maintains a connection to Arduino IoT Cloud
+ * and controls the associated device with its public methods.
+ *
+ * When Arduino Cloud sends down a variable update, a Deno
+ * `BroadcastChannel` is used to notify the SSE stream generator.
+ *
+ * Use it like a singleton.
+ *
+ * # Usage:
+ * ```ts
+ * const batSignal = new BatSignal()
+ * await batSignal.connect()
+ * batSignal.on()
+ * ```
+ */
 
-`BatSignal` maintains a connection to Arduino IoT Cloud
-and controls the associated device with its public methods.
-
-Use it like a singleton.
-
-# Usage:
-```ts
-const batSignal = new BatSignal()
-await batSignal.connect()
-batSignal.on()
-```
-
-*/
 export default class BatSignal {
   private client: ISinglePropertyCloudClient | null = null;
 
@@ -93,20 +96,14 @@ export default class BatSignal {
     this.broadcastChannel.postMessage("CHANGED");
   }
 
-  isOn() {
-    return this.bat_signal;
-  }
-
   /* @throws */
   on() {
-    if (this.isOn()) return;
     this.setBatSignal(true);
     console.log("TURNED ON BAT SIGNAL");
   }
 
   /* @throws */
   off() {
-    if (!this.isOn()) return;
     this.setBatSignal(false);
     console.log("TURNED OFF BAT SIGNAL");
   }
@@ -115,6 +112,10 @@ export default class BatSignal {
   toggle() {
     this.setBatSignal(!this.bat_signal);
     console.log(`TOGGLED BAT SIGNAL -> ${this.bat_signal}`);
+  }
+
+  isOn() {
+    return this.bat_signal;
   }
 
   isSomeoneComing() {
