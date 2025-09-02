@@ -67,10 +67,6 @@ export default class BatSignal {
     // keep local in sync with cloud
     this.client.onPropertyValue(this.BAT_SIGNAL_VAR, (val: boolean) => {
       this.bat_signal = val;
-
-      // DEBUG
-      // console.log("BROADCAST FROM BAT SIGNAL")
-
       this.broadcastChannel.postMessage("CHANGED");
       console.log(
         `CHANGED IN CLOUD: ${this.BAT_SIGNAL_VAR} -> ${this.bat_signal}`,
@@ -78,10 +74,6 @@ export default class BatSignal {
     });
     this.client.onPropertyValue(this.SOMEONE_IS_COMING_VAR, (val: boolean) => {
       this.someone_is_coming = val;
-
-      // DEBUG
-      // console.log("BROADCAST SOMEONE IS COMING")
-
       this.broadcastChannel.postMessage("CHANGED");
       console.log(
         `CHANGED IN CLOUD: ${this.SOMEONE_IS_COMING_VAR} -> ${this.someone_is_coming}`,
@@ -101,10 +93,6 @@ export default class BatSignal {
     this.assertIsConnected();
     this.bat_signal = val;
     this.client!.sendProperty(this.BAT_SIGNAL_VAR, this.bat_signal);
-
-    // DEBUG
-    // console.log("BROADCAST SET BAT SIGNAL")
-
     this.broadcastChannel.postMessage("CHANGED");
   }
 
