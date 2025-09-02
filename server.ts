@@ -124,6 +124,8 @@ async function isRequestAllowed(req: Request) {
 
 const SSE_HEARTBEAT_INTERVAL_MS = 6_000;
 
+// TODO: FIX: sending many messages very quickly when it should be sending 1
+// This is compensated for in the public frontend as of 25.09.02
 function newStream(req: Request) {
   return new ReadableStream({
     start(controller) {
