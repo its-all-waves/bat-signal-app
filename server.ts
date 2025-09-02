@@ -124,35 +124,34 @@ async function isRequestAllowed(req: Request) {
 
 const SSE_HEARTBEAT_INTERVAL_MS = 6_000;
 
+// TODO: FIX: sending many messages very quickly when it should be sending 1
+// This is compensated for in the public frontend as of 25.09.02
 function newStream(req: Request) {
   return new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
 
-      const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })}\n\n`;
+      const heartbeatMsg = JSON.stringify({ heartbeat: 1 }) + "\n";
 
       // keep the connection alive
       const heartbeatInterval = setInterval(() => {
         controller.enqueue(encoder.encode(heartbeatMsg));
       }, SSE_HEARTBEAT_INTERVAL_MS);
 
-      const initialData = `data: ${
-        JSON.stringify({
+      const initialData = JSON.stringify({
+          ts: Date.now(),
           is_bat_signal_busy: batSignal.isOn(),
           is_someone_coming: batSignal.isSomeoneComing(),
-        })
-      }\n\n`;
+        }) + "\n";
       controller.enqueue(encoder.encode(initialData));
 
       const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
-        // WARNING: problem parsing only some SSE messages on client? try adding a timestamp key to data
-        const data = `data: ${
-          JSON.stringify({
+        const data = JSON.stringify({
+            ts: Date.now(),
             is_bat_signal_busy: batSignal.isOn(),
             is_someone_coming: batSignal.isSomeoneComing(),
-          })
-        }\n\n`;
+          }) + "\n";
         controller.enqueue(encoder.encode(data));
         console.log("[ INFO ] Sent message to client");
       });
