@@ -129,30 +129,27 @@ function newStream(req: Request) {
     start(controller) {
       const encoder = new TextEncoder();
 
-      const heartbeatMsg = `data: ${JSON.stringify({ heartbeat: 1 })}\n\n`;
+      const heartbeatMsg = JSON.stringify({ heartbeat: 1 }) + "\n";
 
       // keep the connection alive
       const heartbeatInterval = setInterval(() => {
         controller.enqueue(encoder.encode(heartbeatMsg));
       }, SSE_HEARTBEAT_INTERVAL_MS);
 
-      const initialData = `data: ${
-        JSON.stringify({
+      const initialData = JSON.stringify({
+          ts: Date.now(),
           is_bat_signal_busy: batSignal.isOn(),
           is_someone_coming: batSignal.isSomeoneComing(),
-        })
-      }\n\n`;
+        }) + "\n";
       controller.enqueue(encoder.encode(initialData));
 
       const broadcastChannel = new BroadcastChannel("bat-signal");
       broadcastChannel.addEventListener("message", () => {
-        // WARNING: problem parsing only some SSE messages on client? try adding a timestamp key to data
-        const data = `data: ${
-          JSON.stringify({
+        const data = JSON.stringify({
+            ts: Date.now(),
             is_bat_signal_busy: batSignal.isOn(),
             is_someone_coming: batSignal.isSomeoneComing(),
-          })
-        }\n\n`;
+          }) + "\n";
         controller.enqueue(encoder.encode(data));
         console.log("[ INFO ] Sent message to client");
       });
