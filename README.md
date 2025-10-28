@@ -27,28 +27,29 @@ Bat Signal does two things:
 
 ### Arduino Cloud
 
-The 'Bat Signal' is the **Thing**. The **Thing** takes the Sketch (source code) and an **Associated Device**, and **Cloud Variables**.
+The 'Bat Signal' is the **Thing**. The **Thing** takes the Sketch (source code), an **Associated Device**, and **Cloud Variables**.
 
-The Deno Server is represented as a **Thing** in Arduino Cloud, and thus also has an **Associated Device**. This "device" is a virtual JS client.
+The Deno Server is represented as a **Thing** in Arduino Cloud, and thus also has an **Associated Device**. In this case, the **Associated Device**' is a "manual" device type, using the JS library provided by Arduino Cloud.
 
 Arduino Cloud dispatches **Cloud Variable** change events to a **Thing's** **Associated Device**, and event handlers are defined in the **Associated Device's** source code.
 
-Each **Thing** gets its own **Cloud Variables**, and **Cloud Variables** of multiple **Things** are set to be synced in the Arduino Cloud UI.
+Each **Thing** gets its own **Cloud Variables**. It's possible to sync **Cloud Variables** of multple **Things**.
 
 > You'd think that you could declare **Cloud Variables**, then at least read from multiple devices, allowing for a single source of truth, but this is not the way Arduino Cloud is designed. In order to sync variables across multiple **Things**, we create **Cloud Variables** of the same type in both **Things** that we want to keep in sync, then set each variable to be synced in Arduino Cloud.
 
-> One annoying effect of the way we sync data between multiple **Things** is, if you have a **Dashboard** set up with toggle switches representing 2 synced **Cloud Variables**, toggling one does not toggle the other, making it appear as if the underlying **Cloud Variables** are not in-sync. However, the end-to-end result is what we expect--when we press the Ding Dong button in the web UI, the physical device's relay is triggered. (Here, the Deno Server **Thing's** `bat_signal` cloud var is [synced]() with that of the Bat Signal **Thing**. The web UI tells the Deno Server to mutate it's **Thing's** `bat_signal`, which triggers the change in that of the Bat Signal **Thing**.)
+> One annoying effect of the way we sync data between multiple **Things** is, if you have a **Dashboard** set up with toggle switches representing 2 synced **Cloud Variables**, toggling one does not toggle the other, making it appear as if the underlying **Cloud Variables** are not in-sync. However, the end-to-end result is what we expect--when we press the Ding Dong button in the web UI, the physical device's relay is triggered.
+>> Here, the Deno Server **Thing's** `bat_signal` **Cloud Variable** is synced with that of the Bat Signal **Thing**. The web UI tells the Deno Server to mutate it's **Thing's** `bat_signal`, which triggers the change in that of the Bat Signal **Thing**.)
 
 Here's the relationship between the synced Cloud Variables:
 
 ```
 Bat Signal
-├─ bat_signal ──────┐
-└─ im_coming ───┐   │
-                │   │
-Deno Server     │   │
-├─ bat_signal ──┘   │
-└─ someone_is_coming┘
+├─ bat_signal ────────┐
+└─ im_coming ──────┐  │
+                   │  │
+Deno Server        │  │
+├─ bat_signal ─────┘  │
+└─ someone_is_coming ─┘
 ```
 
 #### Terms
