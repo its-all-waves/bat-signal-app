@@ -1,27 +1,43 @@
-import type { ISinglePropertyCloudClient } from "npm:arduino-iot-js";
-import { ArduinoIoTCloud } from "npm:arduino-iot-js";
-import { jsClientDeviceId, jsClientSecretKey } from "./secrets.ts";
+import type { ISinglePropertyCloudClient } from "./MockArduinoCloud.ts";
+import { MockArduinoIoTCloud, MockCloudClient } from "./MockArduinoCloud.ts";
 
 /**
+ * BatSignalEmulator - Test version of BatSignal using mock Arduino Cloud
  *
- * `BatSignal` maintains a connection to Arduino IoT Cloud
- * and controls the associated device with its public methods.
- *
- * When Arduino Cloud sends down a variable update, a Deno
- * `BroadcastChannel` is used to notify the SSE stream generator.
- *
- * Use it like a singleton.
+ * This emulator allows you to test the full BatSignal functionality
+ * without connecting to actual Arduino hardware. It simulates:
+ * - Arduino device responses
+ * - Acknowledgement flow
+ * - Sensor triggers
+ * - Offline/online scenarios
  *
  * # Usage:
  * ```ts
- * const batSignal = new BatSignal()
+ * const batSignal = new BatSignalEmulator({
+ *   deviceResponseDelay: 200, // Simulate 200ms Arduino response time
+ *   simulateOffline: false,    // Start in online mode
+ * })
  * await batSignal.connect()
  * batSignal.on()
+ *
+ * // Test offline scenario
+ * batSignal.setOffline(true)
+ * batSignal.on() // This will fail gracefully
+ *
+ * // Test sensor trigger
+ * batSignal.simulateSensorTrigger(true)
  * ```
  */
 
-export default class BatSignal {
-  private client: ISinglePropertyCloudClient | null = null;
+interface EmulatorConfig {
+  /** Simulate Arduino device response delay in ms (default: 100) */
+  deviceResponseDelay?: number;
+  /** Start with device offline (default: false) */
+  simulateOffline?: boolean;
+}
+
+export default class BatSignalEmulator {
+  private client: MockCloudClient | null = null;
 
   private isConnected = false;
 
@@ -46,19 +62,26 @@ export default class BatSignal {
   /* Used to announce Arduino var changes, triggering outgoing SSE message */
   private broadcastChannel = new BroadcastChannel('bat-signal');
 
-  constructor() {}
+  private config: EmulatorConfig;
+
+  constructor(config: EmulatorConfig = {}) {
+    this.config = config;
+    console.log("[EMULATOR] BatSignalEmulator initialized");
+  }
 
   async connect() {
     try {
-      this.client = await ArduinoIoTCloud.connect({
-        deviceId: jsClientDeviceId,
-        secretKey: jsClientSecretKey,
+      this.client = await MockArduinoIoTCloud.connect({
+        deviceId: "mock-device-id",
+        secretKey: "mock-secret-key",
+        deviceResponseDelay: this.config.deviceResponseDelay,
+        simulateOffline: this.config.simulateOffline,
         onConnected: () => {
-          console.log("CONNECTED TO ARDUINO CLOUD");
+          console.log("CONNECTED TO ARDUINO CLOUD (EMULATOR MODE)");
           this.isConnected = true;
         },
         onDisconnect: (message) => {
-          console.error("ERROR: DISCONNECTED FROM ARDUIONO CLOUD:", message);
+          console.error("ERROR: DISCONNECTED FROM ARDUINO CLOUD (EMULATOR MODE):", message);
           this.isConnected = false;
         },
         onOffline: () => {
@@ -67,7 +90,7 @@ export default class BatSignal {
         },
       });
     } catch (err) {
-      console.error("ERROR: COULD NOT CONNECT TO ARDUINO CLOUD:", err);
+      console.error("ERROR: COULD NOT CONNECT TO ARDUINO CLOUD (EMULATOR MODE):", err);
       return;
     }
 
@@ -152,5 +175,43 @@ export default class BatSignal {
 
   isSomeoneComing() {
     return this.someone_is_coming;
+  }
+
+  // ===== EMULATOR-SPECIFIC METHODS =====
+
+  /**
+   * Simulate the someone_is_coming sensor being triggered
+   * This is how you can test the sensor functionality
+   */
+  simulateSensorTrigger(isTriggered: boolean) {
+    if (!this.client) {
+      throw new Error("ERROR: NOT CONNECTED TO ARDUINO CLOUD");
+    }
+    console.log(`[EMULATOR] Simulating sensor trigger: ${isTriggered}`);
+    this.client.simulateSensorTrigger(isTriggered);
+  }
+
+  /**
+   * Toggle the device offline/online status
+   * Use this to test how the system behaves when Arduino is offline
+   */
+  setOffline(offline: boolean) {
+    if (!this.client) {
+      throw new Error("ERROR: NOT CONNECTED TO ARDUINO CLOUD");
+    }
+    console.log(`[EMULATOR] Setting device offline=${offline}`);
+    this.client.setOffline(offline);
+  }
+
+  /**
+   * Get the current connection status
+   */
+  getConnectionStatus() {
+    return {
+      isConnected: this.isConnected,
+      bat_signal: this.bat_signal,
+      someone_is_coming: this.someone_is_coming,
+      did_bat_signal_turn_on: this.did_bat_signal_turn_on,
+    };
   }
 }
